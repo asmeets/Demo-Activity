@@ -1,0 +1,138 @@
+# yaml-language-server: $schema=https://vscodeedu.com/schema/course-v2.schema.json
+id: lessonpart1
+title: Page 1
+duration: 5
+content: |
+  # Vscode.dev Integration
+
+  ###  
+
+  ## Extension command flow
+
+  1.       Enter vscode.dev
+
+  2.       Install Azure ML extension
+
+  ·         **Need discussion**: Talk to vscode how to automatically install an extension when opening an specific route
+
+  3.       Run Azure ML extension command to start the sandboxed experience
+
+  4.       Run Azure authentication if needed
+
+  ·         **Needs investigation**: internal AAD authentication provider or Azure Account extension
+
+  ·         **Prototyped**: Introduce token with input box and add it to the open URLs
+
+  ·         **Notes**: Tested **vscode.authentication.getSession**('microsoft', \['<https://management.core.windows.net/.default>'], {createIfNone: true}) and it returns a valid token
+
+  ·         **TODO**: Open an issue -> vscode.authentication.getSession does not work when testing local dev environment
+
+  5.       Select the desired target
+
+  6.       Azure ML extension build a custom URL:
+
+  ·         azureml://jupyter+url=\<JUPYTER\_URL>+displayName=\<DISPLAY\_NAME>+displayType=\<DISPLAY\_TYPE>/\<FOLDER\_PATH\_TO\_OPEN>
+
+  ·         **Needs discussion** on the URL design
+
+  7.       Azure ML extension open URL with commands.executeCommand('vscode.openFolder', );
+
+  8.       vscode.dev reads the URL and tries to find a proper WorkspaceResolver to translate it to an http URL that points to a valid route
+
+  ·         **Needs discussion**: Currently vscode.dev only supports a set of workspace resolver and routes, talk to vscode.dev on how an extension can contribute its own workspace resolver.
+
+  ·         **Prototyped**: Add a vscode.dev workspace resolver that translates the URL to:
+
+  §  /azureml/jupyter/\<JUPYTER\_URL>/
+
+  9.       vscode.dev opens the http URL with window\.open(url)
+
+  10.   Browser loads the new URL and the router kicks in looking for a valid route handler
+
+  ·         **Needs discussion**: Currently vscode.dev only supports a set of routes, need to figure out how an extension can contribute its own route.
+
+  ·         **Prototyped**: Added an azureml route in vscode.dev codebase
+
+  11.   Route handler transforms http URL to a valid IRouterResult, then it opens it with workbench.create
+
+  ·         IRouterResult contains a folderUri or workspaceUri wich is a URI that identifies the folder to open
+
+  ·         **Prototyped** the azureml router translates the http URI to and azureml URI
+
+  §  azureml://jupyter+url=\<JUPYTER\_URL>+displayName=\<DISPLAY\_NAME>+displayType=\<DISPLAY\_TYPE>/\<FOLDER\_PATH\_TO\_OPEN>
+
+  12.   Azure ML extension activates when the azureml URI opens
+
+  ·         **Prototyped**: Added an activation event for "azureml" file system
+
+  13.   Azure ML extension registers a file system that understands azureml URI
+
+  ·         **Prototyped**: File system that reads from jupyter content manager service
+
+  14.   Folder is opened and we have read and write access
+
+  ·         **TODO**: Debug writting
+
+  ## Extension direct landing flow
+
+  Same flow starting from step 10 of previous section - **Need investigation** how to automatically install an extension given the selected route
+
+  ## Action items
+
+  15.   Authorization research
+
+  ·         Token as param
+
+  ·         vscode.dev AAD authentication provider in proposed api
+
+  ·         Azure Account migration to web
+
+  16.   Discuss with vscode team how extensions can contribute WorkspaceResolver and Route
+
+  ·         Install extension on route
+
+   
+
+  ## Cheapest Path
+
+  **Scope:** Editing environment for a compute/job with a running Jupyter endpoint.
+
+  **Phase 0:** Edit-only experience in the browser for running compute instance, without Azure ML context.
+
+  ·         P0: Surface shared fileshare as workspace filesystem
+
+  ·         P0: Prompt to transition to desktop when we get a signal from users that they want to run/debug.
+
+  o   What do we need to properly invoke the URI to connect to the compute instance?
+
+  ·         P0: Prompt for feedback in the web editor
+
+  o   “Would you like to provide feedback about the Azure ML web-editing experience?”
+
+   
+
+  ·         Azure ML extension contributes the “azureml” route [\[SU1\]](#_msocom_1) [\[SU2\]](#_msocom_2) back to vscode.dev
+
+  o   Model after /codetour and /liveshare
+
+  o   Talk to vscode.dev team about plans for /azurerepos
+
+  o   Full URL: vscode.dev/azureml/displayType/displayName/jupyterUrl
+
+  §  Vscode.dev/azureml/computeInstance/ic-learning/\<encodedUrl>/\<encodedComputeId>
+
+  ·         Azure ML extension registers URI:
+
+  o   azureml://jupyter+url=\<JUPYTER\_URL>+displayName=\<DISPLAY\_NAME>+displayType=\<DISPLAY\_TYPE>+computeId=\<COMPUTE\_ID>/
+
+  o   This is a filesystem activation event for the extension
+
+  ***
+
+   [\[SU1\]](#_msoanchor_1)Who is responsible for "handling" what comes after a route in the URL. For example, with vscode.dev/codetour/repo, is the logic to handle "repo" in the codetour extension or is it in vscode.dev?
+
+   [\[SU2\]](#_msoanchor_2)If that logic is tied to the extension, we should only contribute the "azureml" route to vscode.dev. If it is tied to vscode.dev, we should think of the simplest "path" to contribute back such that we don't have to frequently contribute in the future to support other scenarios.
+showContent: true
+showEditor: false
+showTerminal: false
+showExplorer: false
